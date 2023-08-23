@@ -1,6 +1,6 @@
 from settings import *
 import json, os
-from support import quit_all, get_window, next_time
+from support import quit_all, get_window, next_time, main_font
 from level.ui import UI
 from level.bg import BG
 from level.player import Player
@@ -15,6 +15,7 @@ class Level:
         self.audio = self.main.audio
         self.assets = self.main.asset_loader
         self.display_surface = get_window()
+        self.fps_font = main_font(18)
 
         self.visible = pygame.sprite.Group()
         self.visible_top = pygame.sprite.Group()
@@ -50,6 +51,8 @@ class Level:
 
         self.last_wave = 0
         self.next_wave_time = next_time("wave")
+        self.fps_txt = self.fps_font.render(f"NULL FPS ", False, "white")
+        self.fps_trect = self.fps_txt.get_rect(bottomright=(WIDTH, HEIGHT))
         self.load_data()
 
     def post_menu(self):
@@ -137,8 +140,14 @@ class Level:
         self.speed += SPEED_INCREASE*dt
         self.speed = min(self.speed, 900)
 
+    def update_fps(self):
+        if not self.main.menu.show_fps: return
+        self.fps_txt = self.fps_font.render(f"{self.main.clock.get_fps():.0f} FPS ", False, "white")
+        self.fps_trect = self.fps_txt.get_rect(bottomright=(WIDTH, HEIGHT))
+
     def update(self, dt):
         self.transition.update(dt)
+        self.update_fps()
         if self.paused:
             self.pause_menu.update(dt)
             return
@@ -170,4 +179,5 @@ class Level:
         if not self.paused and not self.player.dead: self.ui.draw()
         if self.paused and self.transition.midway: self.pause_menu.draw()
         if self.player.dead and self.transition.midway: self.death_menu.draw()
+        if self.main.menu.show_fps: self.display_surface.blit(self.fps_txt, self.fps_trect)
         self.transition.draw()

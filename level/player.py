@@ -62,6 +62,7 @@ class Player(AnimatedStatus):
             self.on_end_func = self.finish_death
             if particles: FxParticle(self.rect.center, self.level, "enemy-death", 1)
             self.lives -= 1
+            self.powerups = {}
 
     def finish_death(self):
         if self.lives <= 0:

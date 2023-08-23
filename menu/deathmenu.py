@@ -20,12 +20,12 @@ class DeathMenu:
         self.title_rect = self.title_img.get_rect(midtop=self.inner_rect.midtop)
 
         self.font = main_font(20)
-        self.retry_button = ButtonOscillating(self.menu_assets["mine-big"], self.font.render("Retry", False, "white"), midtop=(self.title_rect.midbottom))
+        self.retry_button = ButtonOscillating(self.menu_assets["mine-big"], self.font.render("Retry [R]", False, "white"), midtop=(self.title_rect.midbottom))
         self.menu_button = ButtonOscillating(self.menu_assets["mine-big"], self.font.render("Menu", False, "white"), midright=(self.retry_button.hitbox.midleft))
         self.quit_button = ButtonOscillating(self.menu_assets["mine-big"], self.font.render("Quit", False, "white"), midleft=(self.retry_button.hitbox.midright))
 
     def update(self, dt):
-        if self.retry_button.check(self.level.audio): self.level.retry()
+        if self.retry_button.check(self.level.audio) or pygame.key.get_pressed()[pygame.K_r]:self.level.retry()
         if self.menu_button.check(self.level.audio):
             self.level.save_data()
             self.level.main.back_to_menu()

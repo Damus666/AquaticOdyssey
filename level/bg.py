@@ -62,6 +62,7 @@ class BG:
         if self.midbg_x <= -self.midbg_w: self.midbg_x = 0
 
         #lights
+        if not self.level.main.menu.enable_lights: return
         if pygame.time.get_ticks()-self.last_light >= self.next_light_time:
             self.last_light = pygame.time.get_ticks()
             self.next_light_time = next_time("light")
@@ -84,4 +85,5 @@ class BG:
         self.display_surface.blit(self.midbg_surf, (self.midbg_x+self.midbg_w, 0))
 
     def draw_lights(self):
+        if not self.level.main.menu.enable_lights: return
         for light in self.lights: light.draw()

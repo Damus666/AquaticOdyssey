@@ -1,6 +1,6 @@
 from settings import *
 from level.generic import AnimatedStatus
-from support import rect_circle
+from support import rect_circle, main_font, get_window
 
 class MenuPlayer(AnimatedStatus):
     def __init__(self, menu):
@@ -10,6 +10,14 @@ class MenuPlayer(AnimatedStatus):
         self.orientation = "right"
         self.direction = vec()
         self.collidable = [self.menu.static_menu_rect, self.menu.cc_art_rect, self.menu.cc_music_rect]
+        self.display_surface = get_window()
+
+        self.helper_font = main_font(16)
+        self.helper_keys_txt = self.helper_font.render(f"WASD/Arrows to move", False, "white")
+        self.helper_bomb_txt = self.helper_font.render(f"Touch the bombs", False, "white")
+        self.helper_keys_rect = self.helper_keys_txt.get_rect()
+        self.helper_bomb_rect = self.helper_bomb_txt.get_rect()
+        self.need_help = True
 
         self.normal_animations = self.animations.copy()
         self.flipped_animations = {status:[pygame.transform.flip(img, True, False) for img in frames] for status, frames in self.animations.items()}
@@ -34,6 +42,7 @@ class MenuPlayer(AnimatedStatus):
         if self.direction.length() != 0:
             self.direction.normalize_ip()
             self.set_status("swim")
+            self.need_help = False
         else: self.set_status("idle")
 
         self.pos.x += self.direction.x*MENU_PLAYER_SPEED*dt
@@ -84,9 +93,20 @@ class MenuPlayer(AnimatedStatus):
             if rect_circle(self.hitbox, mine.rect.center, mine.radius):
                 mine.collided()
 
+    def helpers(self):
+        if not self.need_help: return
+        self.helper_bomb_rect.midbottom = self.rect.midtop
+        self.helper_keys_rect.midbottom = self.helper_bomb_rect.midtop
+
+    def draw_helpers(self):
+        if not self.need_help: return
+        self.display_surface.blit(self.helper_keys_txt, self.helper_keys_rect)
+        self.display_surface.blit(self.helper_bomb_txt, self.helper_bomb_rect)
+
     def update(self, dt):
         self.animate(dt)
         self.movement(dt)
+        self.helpers()
 
         self.window_collisions()
         self.mine_collisions()

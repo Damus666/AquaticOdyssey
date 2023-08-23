@@ -62,6 +62,10 @@ class ButtonIT:
         white_surf.fill((30,30,30))
         self.hover_image.blit(white_surf,(0,0),special_flags=pygame.BLEND_RGB_ADD)
 
+    def refresh_text(self, img):
+        self.text_img = img
+        self.text_rect = self.text_img.get_rect(center=(self.hitbox.centerx+self.text_offset[0], self.hitbox.centery+self.text_offset[1]))
+
     def check(self, audio, btn=0):
         action= self.logic.check(self.hitbox, btn)
         if action and audio: audio.play_fx("explosion")

@@ -5,6 +5,7 @@ from level.bg import BG
 from menu.menuplayer import MenuPlayer
 from menu.elements import MineButton, ButtonOscillating
 from menu.shop import Shop
+from menu.menusettings import Settings
 
 class Menu:
     def __init__(self, main):
@@ -40,13 +41,23 @@ class Menu:
         self.cc_music_btn = ButtonOscillating(islandimg, self.font.render("Music Credits", False, "white"), 
                                             midright=(WIDTH, HEIGHT), text_offset = (0, -islandimg.get_height()//4))
         self.cc_music_rect = self.cc_music_btn.hitbox.copy()
+        self.settings_button = ButtonOscillating(self.assets["enemies"]["mine"]["normal"],
+                            self.font.render("Settings", False, "white"), topright=(WIDTH,0))
 
+        self.show_fps = False
+        self.enable_lights = True
         self.shop = Shop(self)
+        self.settings = Settings(self)
         self.in_shop = False
+        self.in_settings = False
         self.back()
 
     def back_from_shop(self):
         self.in_shop = False
+        self.refresh_sprites()
+
+    def back_from_settings(self):
+        self.in_settings = False
         self.refresh_sprites()
 
     def load_data(self):
@@ -54,11 +65,19 @@ class Menu:
         with open("data/menu.save", "rb") as file:
             encoded_data = file.read()
             data = self.main.fernet.decrypt(encoded_data)
-            self.inventory = json.loads(data)
+            menu_data = json.loads(data)
+            self.inventory = menu_data["inventory"]
+            self.show_fps = menu_data["show-fps"]
+            self.enable_lights = menu_data["enable-lights"]
 
     def save_data(self):
         with open("data/menu.save", "wb") as file:
-            data = json.dumps(self.inventory)
+            menu_data = {
+                "inventory": self.inventory,
+                "show-fps": self.show_fps,
+                "enable-lights": self.enable_lights,
+            }
+            data = json.dumps(menu_data)
             encoded_data = self.main.fernet.encrypt(data.encode())
             file.write(encoded_data)
 
@@ -116,11 +135,19 @@ class Menu:
         self.inner_rect.centery = self.menu_rect.centery
         self.title_rect.center = self.inner_rect.center
 
+    def open_settings(self):
+        self.in_settings = True
+        self.settings.refresh()
+
     def update(self, dt):
         self.bg.update(dt)
 
         if self.in_shop:
             self.shop.update(dt)
+            return
+        
+        if self.in_settings:
+            self.settings.update(dt)
             return
         
         self.update_menu()
@@ -132,11 +159,14 @@ class Menu:
         if self.cc_music_btn.check():
             webbrowser.open_new_tab("pacethemusician@hotmail.com")
             webbrowser.open_new_tab("https://soundcloud.com/pascalbelisle")
+        if self.settings_button.check(self.audio):
+            self.open_settings()
 
     def draw(self):
         self.bg.draw()
         
         if self.in_shop: self.shop.draw()
+        elif self.in_settings: self.settings.draw()
         else:
             self.sprites.draw(self.display_surface)
 
@@ -145,7 +175,9 @@ class Menu:
 
             self.cc_art_btn.draw()
             self.cc_music_btn.draw()
+            self.settings_button.draw()
 
             self.display_surface.blit(self.high_score_surf, self.high_score_rect)
+            self.menu_player.draw_helpers()
 
         self.bg.draw_lights()
